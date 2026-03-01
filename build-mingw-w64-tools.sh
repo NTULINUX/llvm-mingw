@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
 unset HOST
 
@@ -56,8 +56,8 @@ fi
 : ${CORES:=$(nproc 2>/dev/null)}
 : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
 : ${CORES:=4}
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64 armv7 aarch64 arm64ec}}
-: ${TARGET_OSES:=${TOOLCHAIN_TARGET_OSES-mingw32 mingw32uwp}}
+: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
+: ${TARGET_OSES:=${TOOLCHAIN_TARGET_OSES-mingw32}}
 
 if [ -n "$HOST" ]; then
     CONFIGFLAGS="$CONFIGFLAGS --host=$HOST"
@@ -74,29 +74,6 @@ else
         ;;
     esac
 fi
-if [ -n "$MACOS_REDIST" ]; then
-    if [ -z "$CFLAGS" ]; then
-        CFLAGS="-g -O2"
-    fi
-    : ${MACOS_REDIST_ARCHS:=arm64 x86_64}
-    : ${MACOS_REDIST_VERSION:=10.12}
-    NONNATIVE_ARCH=
-    for arch in $MACOS_REDIST_ARCHS; do
-        CFLAGS="$CFLAGS -arch $arch"
-        if [ "$(uname -m)" != "$arch" ]; then
-            case $arch in
-            arm64) NONNATIVE_ARCH=aarch64 ;;
-            *)     NONNATIVE_ARCH=$arch ;;
-            esac
-        fi
-    done
-    if [ -n "$NONNATIVE_ARCH" ]; then
-        # If we're not building for the native arch, flag that we're
-        # cross compiling.
-        CONFIGFLAGS="$CONFIGFLAGS --host=$NONNATIVE_ARCH-apple-darwin"
-    fi
-    export CFLAGS="$CFLAGS -mmacosx-version-min=$MACOS_REDIST_VERSION"
-fi
 if [ -n "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
     INCLUDEDIR="$PREFIX/include"
 else
@@ -110,7 +87,7 @@ cd mingw-w64-tools/gendef
 [ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-../configure --prefix="$PREFIX" $CONFIGFLAGS
+CC="x86_64-w64-mingw32-clang" CXX="x86_64-w64-mingw32-clang++" LD="ld.lld" ../configure --prefix="$PREFIX" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip
 mkdir -p "$PREFIX/share/gendef"
@@ -119,7 +96,8 @@ cd ../../widl
 [ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-../configure --prefix="$PREFIX" --target=$ANY_ARCH-w64-mingw32 --with-widl-includedir="$INCLUDEDIR" $CONFIGFLAGS
+CC="x86_64-w64-mingw32-clang" CXX="x86_64-w64-mingw32-clang++" LD="ld.lld" ../configure --prefix="$PREFIX" \
+    --target=$ANY_ARCH-w64-mingw32 --with-widl-includedir="$INCLUDEDIR" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip
 mkdir -p "$PREFIX/share/widl"

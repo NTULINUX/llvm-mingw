@@ -68,29 +68,6 @@ c11)
     ;;
 esac
 LINKER_FLAGS=""
-case $TARGET_OS in
-mingw32uwp)
-    # the UWP target is for Windows 10
-    FLAGS="$FLAGS -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00"
-    # the UWP target can only use Windows Store APIs
-    FLAGS="$FLAGS -DWINAPI_FAMILY=WINAPI_FAMILY_APP"
-    # the Windows Store API only supports Windows Unicode (some rare ANSI ones are available)
-    FLAGS="$FLAGS -DUNICODE"
-    # Force the Universal C Runtime
-    FLAGS="$FLAGS -D_UCRT"
-
-    # Default linker flags; passed after any user specified -l options,
-    # to let the user specified libraries take precedence over these.
-
-    # add the minimum runtime to use for UWP targets
-    LINKER_FLAGS="$LINKER_FLAGS --start-no-unused-arguments"
-    LINKER_FLAGS="$LINKER_FLAGS -Wl,-lwindowsapp"
-    # This still requires that the toolchain (in particular, libc++.a) has
-    # been built targeting UCRT originally.
-    LINKER_FLAGS="$LINKER_FLAGS -Wl,-lucrtapp"
-    LINKER_FLAGS="$LINKER_FLAGS --end-no-unused-arguments"
-    ;;
-esac
 
 FLAGS="$FLAGS -target $TARGET"
 FLAGS="$FLAGS --end-no-unused-arguments"

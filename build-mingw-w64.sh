@@ -14,30 +14,14 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
-: ${DEFAULT_WIN32_WINNT:=0x601}
-: ${DEFAULT_MSVCRT:=ucrt}
 : ${MINGW_W64_VERSION:=43f2643cbde20aff1c4b89a98c78d0b4b0fe90c2}
-
-CFGUARD_FLAGS="--enable-cfguard"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-    --skip-include-triplet-prefix)
-        SKIP_INCLUDE_TRIPLET_PREFIX=1
-        ;;
     --with-default-win32-winnt=*)
         DEFAULT_WIN32_WINNT="${1#*=}"
-        ;;
-    --with-default-msvcrt=*)
-        DEFAULT_MSVCRT="${1#*=}"
-        ;;
-    --enable-cfguard)
-        CFGUARD_FLAGS="--enable-cfguard"
-        ;;
-    --disable-cfguard)
-        CFGUARD_FLAGS=
         ;;
     *)
         PREFIX="$1"
@@ -47,7 +31,7 @@ while [ $# -gt 0 ]; do
 done
 if [ -z "$CHECKOUT_ONLY" ]; then
     if [ -z "$PREFIX" ]; then
-        echo "$0 [--skip-include-triplet-prefix] [--with-default-win32-winnt=0x601] [--with-default-msvcrt=ucrt] [--enable-cfguard|--disable-cfguard] dest"
+        echo "$0 [--with-default-win32-winnt=0x0A00] dest"
         exit 1
     fi
 
@@ -82,12 +66,10 @@ esac
 
 export PATH="$PREFIX/bin:$PATH"
 
-unset CC
-
 : ${CORES:=$(nproc 2>/dev/null)}
 : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
 : ${CORES:=4}
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64 armv7 aarch64 arm64ec}}
+: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
 if [ -z "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
     HEADER_ROOT="$PREFIX/generic-w64-mingw32"
@@ -99,8 +81,9 @@ cd mingw-w64-headers
 [ -z "$CLEAN" ] || rm -rf build
 mkdir -p build
 cd build
-../configure --prefix="$HEADER_ROOT" \
-    --enable-idl --with-default-win32-winnt=$DEFAULT_WIN32_WINNT --with-default-msvcrt=$DEFAULT_MSVCRT INSTALL="install -C"
+CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
+    ../configure --prefix="$HEADER_ROOT" \
+    --enable-idl --with-default-win32-winnt=0x0A00 --with-default-msvcrt=ucrt INSTALL="install -C"
 $MAKE install
 cd ../..
 if [ -z "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
@@ -118,12 +101,6 @@ for arch in $ARCHS; do
     mkdir -p build-$arch
     cd build-$arch
     case $arch in
-    armv7)
-        FLAGS="--disable-lib32 --disable-lib64 --enable-libarm32"
-        ;;
-    aarch64|arm64ec)
-        FLAGS="--disable-lib32 --disable-lib64 --enable-libarm64"
-        ;;
     i686)
         FLAGS="--enable-lib32 --disable-lib64"
         ;;
@@ -131,9 +108,10 @@ for arch in $ARCHS; do
         FLAGS="--disable-lib32 --enable-lib64"
         ;;
     esac
-    FLAGS="$FLAGS --with-default-msvcrt=$DEFAULT_MSVCRT"
+    FLAGS="$FLAGS --with-default-msvcrt=ucrt"
     FLAGS="$FLAGS --enable-silent-rules"
-    ../configure --host=$arch-w64-mingw32 --prefix="$PREFIX/$arch-w64-mingw32" $FLAGS $CFGUARD_FLAGS $CRT_CONFIG_FLAGS
+    CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
+        ../configure --host=$arch-w64-mingw32 --prefix="$PREFIX/$arch-w64-mingw32" $FLAGS $CRT_CONFIG_FLAGS
     $MAKE -j$CORES
     $MAKE install
     cd ..

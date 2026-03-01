@@ -14,26 +14,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
-CFGUARD_CFLAGS="-mguard=cf"
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --enable-cfguard)
-        CFGUARD_CFLAGS="-mguard=cf"
-        ;;
-    --disable-cfguard)
-        CFGUARD_CFLAGS=
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$PREFIX" ]; then
-    echo "$0 [--enable-cfguard|--disable-cfguard] dest"
+    echo "$0 dest"
     exit 1
 fi
 
@@ -42,7 +27,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 
 export PATH="$PREFIX/bin:$PATH"
 
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64 armv7 aarch64 arm64ec}}
+: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
 if [ ! -d llvm-project/openmp ] || [ -n "$SYNC" ]; then
     CHECKOUT_ONLY=1 ./build-llvm.sh
@@ -70,10 +55,6 @@ for arch in $ARCHS; do
     x86_64)
         CMAKEFLAGS="$CMAKEFLAGS -DLIBOMP_ASMFLAGS=-m64"
         ;;
-    arm64ec)
-        # Not yet supported
-        continue
-        ;;
     esac
 
     [ -z "$CLEAN" ] || rm -rf build-openmp-$arch
@@ -93,9 +74,6 @@ for arch in $ARCHS; do
         -DCMAKE_AR="$PREFIX/bin/llvm-ar" \
         -DCMAKE_RANLIB="$PREFIX/bin/llvm-ranlib" \
         -DLLVM_ENABLE_RUNTIMES="openmp" \
-        -DLIBOMP_ENABLE_SHARED=TRUE \
-        -DCMAKE_C_FLAGS_INIT="$CFGUARD_CFLAGS" \
-        -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS" \
         $CMAKEFLAGS \
         ..
     cmake --build . ${CORES:+-j${CORES}}

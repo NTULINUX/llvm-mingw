@@ -14,32 +14,12 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
-BUILD_STATIC=ON
-BUILD_SHARED=ON
-CFGUARD_CFLAGS="-mguard=cf"
+PREFIX="$1"
 
-while [ $# -gt 0 ]; do
-    if [ "$1" = "--disable-shared" ]; then
-        BUILD_SHARED=OFF
-    elif [ "$1" = "--enable-shared" ]; then
-        BUILD_SHARED=ON
-    elif [ "$1" = "--disable-static" ]; then
-        BUILD_STATIC=OFF
-    elif [ "$1" = "--enable-static" ]; then
-        BUILD_STATIC=ON
-    elif [ "$1" = "--enable-cfguard" ]; then
-        CFGUARD_CFLAGS="-mguard=cf"
-    elif [ "$1" = "--disable-cfguard" ]; then
-        CFGUARD_CFLAGS=
-    else
-        PREFIX="$1"
-    fi
-    shift
-done
 if [ -z "$PREFIX" ]; then
-    echo "$0 [--disable-shared] [--disable-static] [--enable-cfguard|--disable-cfguard] dest"
+    echo "$0 dest"
     exit 1
 fi
 
@@ -48,7 +28,7 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 
 export PATH="$PREFIX/bin:$PATH"
 
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64 armv7 aarch64 arm64ec}}
+: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
 if [ ! -d llvm-project/libunwind ] || [ -n "$SYNC" ]; then
     CHECKOUT_ONLY=1 ./build-llvm.sh
@@ -79,6 +59,7 @@ for arch in $ARCHS; do
     [ -n "$NO_RECONF" ] || rm -rf CMake*
     cmake \
         ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
+        -DBUILD_SHARED_LIBS=OFF \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$PREFIX/$arch-w64-mingw32" \
         -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \
@@ -91,11 +72,11 @@ for arch in $ARCHS; do
         -DCMAKE_RANLIB="$PREFIX/bin/llvm-ranlib" \
         -DLLVM_ENABLE_RUNTIMES="libunwind;libcxxabi;libcxx" \
         -DLIBUNWIND_USE_COMPILER_RT=TRUE \
-        -DLIBUNWIND_ENABLE_SHARED=$BUILD_SHARED \
-        -DLIBUNWIND_ENABLE_STATIC=$BUILD_STATIC \
+        -DLIBUNWIND_ENABLE_SHARED=OFF \
+        -DLIBUNWIND_ENABLE_STATIC=ON \
         -DLIBCXX_USE_COMPILER_RT=ON \
-        -DLIBCXX_ENABLE_SHARED=$BUILD_SHARED \
-        -DLIBCXX_ENABLE_STATIC=$BUILD_STATIC \
+        -DLIBCXX_ENABLE_SHARED=OFF \
+        -DLIBCXX_ENABLE_STATIC=ON \
         -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=TRUE \
         -DLIBCXX_CXX_ABI=libcxxabi \
         -DLIBCXX_LIBDIR_SUFFIX="" \
@@ -107,8 +88,6 @@ for arch in $ARCHS; do
         -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
         -DLIBCXXABI_ENABLE_SHARED=OFF \
         -DLIBCXXABI_LIBDIR_SUFFIX="" \
-        -DCMAKE_C_FLAGS_INIT="$CFGUARD_CFLAGS" \
-        -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS" \
         ..
 
     cmake --build . ${CORES:+-j${CORES}}

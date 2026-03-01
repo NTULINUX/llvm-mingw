@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
 unset HOST
 
@@ -34,10 +34,6 @@ if [ -z "$PREFIX" ]; then
     exit 1
 fi
 cd "$PREFIX"
-
-if [ -n "$FULL_LLVM" ]; then
-    exit 0
-fi
 
 if [ -n "$HOST" ]; then
     case $HOST in

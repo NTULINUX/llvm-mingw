@@ -14,26 +14,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -e
+set -ex
 
-USE_CFLAGS="-g -O2 -mguard=cf"
+USE_CFLAGS="-O2"
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --enable-cfguard)
-        USE_CFLAGS="-g -O2 -mguard=cf"
-        ;;
-    --disable-cfguard)
-        USE_CFLAGS="-g -O2"
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$PREFIX" ]; then
-    echo "$0 [--enable-cfguard|--disable-cfguard] dest"
+    echo "$0 dest"
     exit 1
 fi
 mkdir -p "$PREFIX"
@@ -44,7 +31,7 @@ unset CC
 : ${CORES:=$(nproc 2>/dev/null)}
 : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
 : ${CORES:=4}
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64 armv7 aarch64 arm64ec}}
+: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
 if [ ! -d mingw-w64 ] || [ -n "$SYNC" ]; then
     CHECKOUT_ONLY=1 ./build-mingw-w64.sh
@@ -63,7 +50,7 @@ for lib in winpthreads winstorecompat; do
         mkdir -p build-$arch
         cd build-$arch
         arch_prefix="$PREFIX/$arch-w64-mingw32"
-        ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
+        CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang+" ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
             --enable-silent-rules \
             CFLAGS="$USE_CFLAGS" \
             CXXFLAGS="$USE_CFLAGS"

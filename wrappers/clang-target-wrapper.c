@@ -66,37 +66,12 @@ int _tmain(int argc, TCHAR* argv[]) {
     else if (!_tcscmp(exe, _T("c11")))
         exec_argv[arg++] = _T("-std=c11");
 
-    if (target_os && !_tcscmp(target_os, _T("mingw32uwp"))) {
-        // the UWP target is for Windows 10
-        exec_argv[arg++] = _T("-D_WIN32_WINNT=0x0A00");
-        exec_argv[arg++] = _T("-DWINVER=0x0A00");
-        // the UWP target can only use Windows Store APIs
-        exec_argv[arg++] = _T("-DWINAPI_FAMILY=WINAPI_FAMILY_APP");
-        // the Windows Store API only supports Windows Unicode (some rare ANSI ones are available)
-        exec_argv[arg++] = _T("-DUNICODE");
-        // force the Universal C Runtime
-        exec_argv[arg++] = _T("-D_UCRT");
-    }
-
     exec_argv[arg++] = _T("-target");
     exec_argv[arg++] = target;
     exec_argv[arg++] = _T("--end-no-unused-arguments");
 
     for (int i = 1; i < argc; i++)
         exec_argv[arg++] = argv[i];
-
-    if (target_os && !_tcscmp(target_os, _T("mingw32uwp"))) {
-        // Default linker flags; passed after any user specified -l options,
-        // to let the user specified libraries take precedence over these.
-
-        exec_argv[arg++] = _T("--start-no-unused-arguments");
-        // add the minimum runtime to use for UWP targets
-        exec_argv[arg++] = _T("-Wl,-lwindowsapp");
-        // This still requires that the toolchain (in particular, libc++.a) has
-        // been built targeting UCRT originally.
-        exec_argv[arg++] = _T("-Wl,-lucrtapp");
-        exec_argv[arg++] = _T("--end-no-unused-arguments");
-    }
 
     exec_argv[arg] = NULL;
     if (arg > max_arg) {
