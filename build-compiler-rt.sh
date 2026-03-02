@@ -72,10 +72,10 @@ if [ -h "$CLANG_RESOURCE_DIR/include" ]; then
 fi
 
 if [ -n "$NATIVE" ]; then
-    [ -z "$CLEAN" ] || rm -rf build-native
+    rm -rf build-native
     mkdir -p build-native
     cd build-native
-    [ -n "$NO_RECONF" ] || rm -rf CMake*
+    rm -rf CMake*
     cmake \
         ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -101,10 +101,10 @@ if [ -n "$NATIVE" ]; then
 fi
 
 for arch in $ARCHS; do
-    [ -z "$CLEAN" ] || rm -rf build-$arch$BUILD_SUFFIX
+    rm -rf build-$arch$BUILD_SUFFIX
     mkdir -p build-$arch$BUILD_SUFFIX
     cd build-$arch$BUILD_SUFFIX
-    [ -n "$NO_RECONF" ] || rm -rf CMake*
+    rm -rf CMake*
     cmake \
         ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
         -DCMAKE_BUILD_TYPE=Release \

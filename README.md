@@ -26,4 +26,4 @@ Main changes include:
 TODO:
 
  - Re-work git
- - Further attempts to wash out GCC completely for building mingw tools.
+ - More clean up

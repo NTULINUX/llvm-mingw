@@ -18,20 +18,10 @@ set -ex
 
 : ${MINGW_W64_VERSION:=43f2643cbde20aff1c4b89a98c78d0b4b0fe90c2}
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --with-default-win32-winnt=*)
-        DEFAULT_WIN32_WINNT="${1#*=}"
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$CHECKOUT_ONLY" ]; then
     if [ -z "$PREFIX" ]; then
-        echo "$0 [--with-default-win32-winnt=0x0A00] dest"
+        echo "$0 dest"
         exit 1
     fi
 
@@ -78,7 +68,7 @@ else
 fi
 
 cd mingw-w64-headers
-[ -z "$CLEAN" ] || rm -rf build
+rm -rf build
 mkdir -p build
 cd build
 CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
@@ -97,7 +87,7 @@ fi
 
 cd mingw-w64-crt
 for arch in $ARCHS; do
-    [ -z "$CLEAN" ] || rm -rf build-$arch
+    rm -rf build-$arch
     mkdir -p build-$arch
     cd build-$arch
     case $arch in

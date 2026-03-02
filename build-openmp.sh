@@ -57,10 +57,10 @@ for arch in $ARCHS; do
         ;;
     esac
 
-    [ -z "$CLEAN" ] || rm -rf build-openmp-$arch
+    rm -rf build-openmp-$arch
     mkdir -p build-openmp-$arch
     cd build-openmp-$arch
-    [ -n "$NO_RECONF" ] || rm -rf CMake*
+    rm -rf CMake*
 
     cmake \
         ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \

@@ -84,19 +84,19 @@ ANY_ARCH=$(echo $ARCHS | awk '{print $1}')
 CONFIGFLAGS="$CONFIGFLAGS --enable-silent-rules"
 
 cd mingw-w64-tools/gendef
-[ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
+rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-../configure --prefix="$PREFIX" $CONFIGFLAGS
+CC="clang" CXX="clang++" LD="ld.lld" ../configure --prefix="$PREFIX" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip
 mkdir -p "$PREFIX/share/gendef"
 install -m644 ../COPYING "$PREFIX/share/gendef/COPYING.txt"
 cd ../../widl
-[ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
+rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-../configure --prefix="$PREFIX" \
+CC="clang" CXX="clang++" LD="ld.lld" ../configure --prefix="$PREFIX" \
     --target=$ANY_ARCH-w64-mingw32 --with-widl-includedir="$INCLUDEDIR" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip

@@ -46,7 +46,7 @@ cd mingw-w64/mingw-w64-libraries
 for lib in winpthreads winstorecompat; do
     cd $lib
     for arch in $ARCHS; do
-        [ -z "$CLEAN" ] || rm -rf build-$arch
+        rm -rf build-$arch
         mkdir -p build-$arch
         cd build-$arch
         arch_prefix="$PREFIX/$arch-w64-mingw32"

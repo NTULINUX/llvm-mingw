@@ -28,22 +28,8 @@ while [ $# -gt 0 ]; do
         HOST_CLANG=${HOST_CLANG#=}
         HOST_CLANG=${HOST_CLANG:-clang}
         ;;
-    --with-default-win32-winnt=*)
-        MINGW_ARGS="$MINGW_ARGS $1"
-        ;;
     --host=*)
         HOST_ARGS="$HOST_ARGS $1"
-        ;;
-    --wipe-runtimes)
-        WIPE_RUNTIMES=1
-        ;;
-    --clean-runtimes)
-        CLEAN_RUNTIMES=1
-        ;;
-    --stage1)
-        STAGE1=1
-        LLVM_ARGS="$LLVM_ARGS --disable-lldb --disable-clang-tools-extra"
-        NO_LLDB=1
         ;;
     *)
         PREFIX="$1"
@@ -52,7 +38,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 if [ -z "$PREFIX" ]; then
-    echo "$0 [--host-clang[=clang]] [--host=triple] [--with-default-win32-winnt=0x0A00] [--wipe-runtimes] [--clean-runtimes] [--stage1] dest"
+    echo "$0 [--host-clang[=clang]] [--host=triple] dest"
     exit 1
 fi
 
@@ -67,19 +53,6 @@ done
 ./strip-llvm.sh $PREFIX $HOST_ARGS
 ./install-wrappers.sh $PREFIX $HOST_ARGS ${HOST_CLANG:+--host-clang=$HOST_CLANG}
 ./build-mingw-w64-tools.sh $PREFIX $HOST_ARGS
-if [ -n "$NO_RUNTIMES" ]; then
-    exit 0
-fi
-if [ -n "$WIPE_RUNTIMES" ]; then
-    # Remove the runtime code built previously.
-    #
-    # This roughly matches the setup as if --no-runtimes had been passed,
-    # except that compiler-rt headers are left installed in lib/clang/*/include.
-    rm -rf $PREFIX/*-w64-mingw32 $PREFIX/lib/clang/*/lib
-fi
-if [ -n "$CLEAN_RUNTIMES" ]; then
-    export CLEAN=1
-fi
 ./build-mingw-w64.sh $PREFIX $MINGW_ARGS
 ./build-compiler-rt.sh $PREFIX
 ./build-libcxx.sh $PREFIX
