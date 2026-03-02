@@ -87,7 +87,7 @@ cd mingw-w64-tools/gendef
 [ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-CC="x86_64-w64-mingw32-clang" CXX="x86_64-w64-mingw32-clang++" LD="ld.lld" ../configure --prefix="$PREFIX" $CONFIGFLAGS
+../configure --prefix="$PREFIX" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip
 mkdir -p "$PREFIX/share/gendef"
@@ -96,7 +96,7 @@ cd ../../widl
 [ -z "$CLEAN" ] || rm -rf build${CROSS_NAME}
 mkdir -p build${CROSS_NAME}
 cd build${CROSS_NAME}
-CC="x86_64-w64-mingw32-clang" CXX="x86_64-w64-mingw32-clang++" LD="ld.lld" ../configure --prefix="$PREFIX" \
+../configure --prefix="$PREFIX" \
     --target=$ANY_ARCH-w64-mingw32 --with-widl-includedir="$INCLUDEDIR" $CONFIGFLAGS
 $MAKE -j$CORES
 $MAKE install-strip
