@@ -18,24 +18,15 @@ set -ex
 
 : ${LLVM_REPOSITORY:=https://github.com/llvm/llvm-project.git}
 : ${LLVM_VERSION:=llvmorg-22.1.0}
-unset HOST
+
 BUILDDIR="build"
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --host=*)
-        HOST="${1#*=}"
-        ;;
-    *)
-        if [ -n "$PREFIX" ]; then
-            echo Unrecognized parameter $1
-            exit 1
-        fi
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+if [ -n "$PREFIX" ]; then
+    echo Unrecognized parameter $1
+    exit 1
+fi
+PREFIX="$1"
+
 BUILDDIR="$BUILDDIR"
 if [ -z "$CHECKOUT_ONLY" ]; then
     if [ -z "$PREFIX" ]; then
@@ -89,20 +80,6 @@ fi
 
 [ -z "$CHECKOUT_ONLY" ] || exit 0
 
-if [ -n "$HOST" ]; then
-    case $HOST in
-    *-mingw32)
-        TARGET_WINDOWS=1
-        ;;
-    esac
-else
-    case $(uname) in
-    MINGW*)
-        TARGET_WINDOWS=1
-        ;;
-    esac
-fi
-
 if command -v ninja >/dev/null; then
     CMAKE_GENERATOR="Ninja"
 else
@@ -121,48 +98,7 @@ CMAKEFLAGS="$LLVM_CMAKEFLAGS"
 CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER=clang"
 CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER=clang++"
 CMAKEFLAGS="$CMAKEFLAGS -DLLVM_USE_LINKER=lld"
-#CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
-
-if [ -n "$HOST" ]; then
-    ARCH="${HOST%%-*}"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_ASM_COMPILER_TARGET=$HOST"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER_TARGET=$HOST"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER_TARGET=$HOST"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_STRIP=$(command -v $HOST-strip)"
-    case $HOST in
-    *-mingw32)
-        CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_SYSTEM_NAME=Windows"
-        CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_RC_COMPILER=$HOST-windres"
-        ;;
-    *)
-        echo "Unrecognized host $HOST"
-        exit 1
-        ;;
-    esac
-
-    native=""
-    for dir in llvm-project/llvm/build/bin llvm-project/llvm/build-asserts/bin; do
-        if [ -x "$dir/llvm-tblgen.exe" ]; then
-            native="$(pwd)/$dir"
-            break
-        elif [ -x "$dir/llvm-tblgen" ]; then
-            native="$(pwd)/$dir"
-            break
-        fi
-    done
-    if [ -z "$native" ] && command -v llvm-tblgen >/dev/null; then
-        native="$(dirname $(command -v llvm-tblgen))"
-    fi
-
-    CROSS_ROOT=$(cd $(dirname $(command -v $HOST-gcc))/../$HOST && pwd)
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_FIND_ROOT_PATH=$CROSS_ROOT"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY"
-    CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY"
-
-    BUILDDIR=$BUILDDIR-$HOST
-fi
+CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
 
 cd llvm-project/llvm
 
@@ -187,7 +123,6 @@ cmake \
     -DLLVM_TARGETS_TO_BUILD="X86" \
     -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
     -DLLVM_TOOLCHAIN_TOOLS="llvm-ar;llvm-ranlib;llvm-objdump;llvm-rc;llvm-cvtres;llvm-nm;llvm-strings;llvm-readobj;llvm-dlltool;llvm-pdbutil;llvm-objcopy;llvm-strip;llvm-cov;llvm-profdata;llvm-addr2line;llvm-symbolizer;llvm-windres;llvm-ml;llvm-readelf;llvm-size;llvm-cxxfilt;llvm-lib" \
-    ${HOST+-DLLVM_HOST_TRIPLE=$HOST} \
     $CMAKEFLAGS \
     ..
 

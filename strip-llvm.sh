@@ -16,51 +16,16 @@
 
 set -ex
 
-unset HOST
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --host=*)
-        HOST="${1#*=}"
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$PREFIX" ]; then
-    echo $0 [--host=triple] dir
+    echo $0 dir
     exit 1
 fi
 cd "$PREFIX"
 
-if [ -n "$HOST" ]; then
-    case $HOST in
-    *-mingw32)
-        EXEEXT=.exe
-        ;;
-    esac
-fi
-
-case $(uname) in
-MINGW*)
-    EXEEXT=.exe
-    ;;
-esac
-
 cd bin
 for i in amdgpu-arch bugpoint c-index-test clang-* clangd clangd-* darwin-debug diagtool dsymutil find-all-symbols git-clang-format hmaptool ld64.lld* llc lldb-* lli llvm-* modularize nvptx-arch obj2yaml offload-arch opt pp-trace sancov sanstats scan-build scan-view split-file verify-uselistorder wasm-ld yaml2* libclang.dll *LTO.dll *Remarks.dll *.bat; do
     basename=$i
-    if [ -n "$EXEEXT" ]; then
-        # Some in the list are expanded globs, some are plain names we list.
-        basename=${i%$EXEEXT}
-        i=$basename
-        if [ -e $basename$EXEEXT ]; then
-            i=$basename$EXEEXT
-        fi
-    fi
-    # Basename has got $EXEEXT stripped, but any other suffix kept intact.
     case $basename in
     *.sh)
         ;;
@@ -104,22 +69,6 @@ for i in amdgpu-arch bugpoint c-index-test clang-* clangd clangd-* darwin-debug 
         ;;
     esac
 done
-if [ -n "$EXEEXT" ]; then
-    # Convert ld.lld from a symlink to a regular file, so we can remove
-    # the one it points to. On MSYS, and if packaging built toolchains
-    # in a zip file, symlinks are converted into copies.
-    if [ -L ld.lld$EXEEXT ]; then
-        cp ld.lld$EXEEXT tmp
-        rm ld.lld$EXEEXT
-        mv tmp ld.lld$EXEEXT
-    fi
-    # lld-link isn't used normally, but can be useful for debugging/testing,
-    # and is kept in unix setups. Removing it when packaging for windows,
-    # to conserve space.
-    rm -f lld$EXEEXT lld-link$EXEEXT
-    # Remove superfluous frontends; these aren't really used.
-    rm -f clang-cpp* clang++*
-fi
 cd ..
 rm -rf libexec
 cd share

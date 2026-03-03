@@ -1,4 +1,4 @@
-LLVM MinGW (minimal)
+x86/AMD64 LLVM MinGW (minimal) toolchain
 ==========
 
 This is a recipe for reproducibly building a
@@ -14,7 +14,7 @@ Main changes include:
  - Remove tests
  - Remove many features such as CFI and sanitizers (this list is very long)
  - Bump MinGW target to 0X0AA (Windows 10 instead of 7)
- - Build (almost) everything with LLVM toolchain instead of GCC (This requires Clang)
+ - Build everything with LLVM toolchain instead of GCC (This requires Clang)
  - Build (almost) everything statically. Building the entire toolchain as static is not
    supported for Windows builds.
  - Simplify all Bash scripts and remove pretty much everything else (ARM, Mac support, etc.)
@@ -22,6 +22,7 @@ Main changes include:
    avoid a few bugs. This is a very minimalistic LLVM MinGW toolchain and should
    only be used if you know you do not need any additional features. I am personally
    using this to simply compile Wine and DXVK.
+ - Complete re-work of toolchain wrappers
 
 TODO:
 

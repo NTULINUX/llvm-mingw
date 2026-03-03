@@ -16,25 +16,10 @@
 
 set -ex
 
-unset HOST
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --skip-include-triplet-prefix)
-        SKIP_INCLUDE_TRIPLET_PREFIX=1
-        ;;
-    --host=*)
-        HOST="${1#*=}"
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$CHECKOUT_ONLY" ]; then
     if [ -z "$PREFIX" ]; then
-        echo $0 [--skip-include-triplet-prefix] [--host=triple] dest
+        echo $0 dest
         exit 1
     fi
 
@@ -59,26 +44,7 @@ fi
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 : ${TARGET_OSES:=${TOOLCHAIN_TARGET_OSES-mingw32}}
 
-if [ -n "$HOST" ]; then
-    CONFIGFLAGS="$CONFIGFLAGS --host=$HOST"
-    CROSS_NAME=-$HOST
-    case $HOST in
-    *-mingw32)
-        EXEEXT=.exe
-        ;;
-    esac
-else
-    case $(uname) in
-    MINGW*)
-        EXEEXT=.exe
-        ;;
-    esac
-fi
-if [ -n "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
-    INCLUDEDIR="$PREFIX/include"
-else
-    INCLUDEDIR="$PREFIX/generic-w64-mingw32/include"
-fi
+INCLUDEDIR="$PREFIX/generic-w64-mingw32/include"
 ANY_ARCH=$(echo $ARCHS | awk '{print $1}')
 
 CONFIGFLAGS="$CONFIGFLAGS --enable-silent-rules"
@@ -109,26 +75,7 @@ cd "$PREFIX/bin"
 for arch in $ARCHS; do
     for target_os in $TARGET_OSES; do
         if [ "$arch" != "$ANY_ARCH" ] || [ "$target_os" != "mingw32" ]; then
-            ln -sf $ANY_ARCH-w64-mingw32-widl$EXEEXT $arch-w64-$target_os-widl$EXEEXT
+            ln -sf $ANY_ARCH-w64-mingw32-widl $arch-w64-$target_os-widl
         fi
     done
 done
-if [ -n "$EXEEXT" ]; then
-    # In a build of the tools for windows, we also want to provide an
-    # unprefixed one. If crosscompiling, we know what the native arch is;
-    # $HOST. If building natively, check the built clang to see what the
-    # default arch is.
-    if [ -z "$HOST" ] && [ -f clang$EXEEXT ]; then
-        HOST=$(./clang -dumpmachine | sed 's/-.*//')-w64-mingw32
-    fi
-    if [ -n "$HOST" ]; then
-        HOST_ARCH="${HOST%%-*}"
-        # Only install an unprefixed symlink if $HOST is one of the architectures
-        # we are installing wrappers for.
-        case $ARCHS in
-        *$HOST_ARCH*)
-            ln -sf $HOST-widl$EXEEXT widl$EXEEXT
-            ;;
-        esac
-    fi
-fi

@@ -16,44 +16,24 @@
 
 set -ex
 
-HOST_CLANG=
-LLVM_ARGS=""
-MINGW_ARGS=""
-HOST_ARGS=""
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --host-clang|--host-clang=*)
-        HOST_CLANG=${1#--host-clang}
-        HOST_CLANG=${HOST_CLANG#=}
-        HOST_CLANG=${HOST_CLANG:-clang}
-        ;;
-    --host=*)
-        HOST_ARGS="$HOST_ARGS $1"
-        ;;
-    *)
-        PREFIX="$1"
-        ;;
-    esac
-    shift
-done
+PREFIX="$1"
 if [ -z "$PREFIX" ]; then
-    echo "$0 [--host-clang[=clang]] [--host=triple] dest"
+    echo "$0 dest"
     exit 1
 fi
 
-for dep in git cmake ${HOST_CLANG}; do
+for dep in git cmake clang; do
     if ! command -v $dep >/dev/null; then
         echo "$dep not installed. Please install it and retry" 1>&2
         exit 1
     fi
 done
 
-./build-llvm.sh $PREFIX $LLVM_ARGS $HOST_ARGS
-./strip-llvm.sh $PREFIX $HOST_ARGS
-./install-wrappers.sh $PREFIX $HOST_ARGS ${HOST_CLANG:+--host-clang=$HOST_CLANG}
-./build-mingw-w64-tools.sh $PREFIX $HOST_ARGS
-./build-mingw-w64.sh $PREFIX $MINGW_ARGS
+./build-llvm.sh $PREFIX
+./strip-llvm.sh $PREFIX
+./install-wrappers.sh $PREFIX
+./build-mingw-w64-tools.sh $PREFIX
+./build-mingw-w64.sh $PREFIX
 ./build-compiler-rt.sh $PREFIX
 ./build-libcxx.sh $PREFIX
 ./build-mingw-w64-libraries.sh $PREFIX
