@@ -15,8 +15,7 @@ Main changes include:
  - Remove many features such as CFI and sanitizers (this list is very long)
  - Bump MinGW target to 0X0AA (Windows 10 instead of 7)
  - Build everything with LLVM toolchain instead of GCC (This requires Clang)
- - Build (almost) everything statically. Building the entire toolchain as static is not
-   supported for Windows builds.
+ - Build everything statically.
  - Simplify all Bash scripts and remove pretty much everything else (ARM, Mac support, etc.)
    This does remove a lot of flexibility, support, and control but should also help
    avoid a few bugs. This is a very minimalistic LLVM MinGW toolchain and should
@@ -27,4 +26,3 @@ Main changes include:
 TODO:
 
  - Re-work git
- - More clean up

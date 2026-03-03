@@ -22,7 +22,7 @@ if [ -z "$PREFIX" ]; then
     exit 1
 fi
 
-for dep in git cmake clang; do
+for dep in git cmake clang gmake ninja; do
     if ! command -v $dep >/dev/null; then
         echo "$dep not installed. Please install it and retry" 1>&2
         exit 1

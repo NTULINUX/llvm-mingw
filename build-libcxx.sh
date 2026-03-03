@@ -17,7 +17,6 @@
 set -ex
 
 PREFIX="$1"
-
 if [ -z "$PREFIX" ]; then
     echo "$0 dest"
     exit 1
@@ -30,27 +29,11 @@ export PATH="$PREFIX/bin:$PATH"
 
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
-if [ ! -d llvm-project/libunwind ] || [ -n "$SYNC" ]; then
-    CHECKOUT_ONLY=1 ./build-llvm.sh
-fi
-
 cd llvm-project
 
 cd runtimes
 
-if command -v ninja >/dev/null; then
-    CMAKE_GENERATOR="Ninja"
-else
-    : ${CORES:=$(nproc 2>/dev/null)}
-    : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-    : ${CORES:=4}
-
-    case $(uname) in
-    MINGW*)
-        CMAKE_GENERATOR="MSYS Makefiles"
-        ;;
-    esac
-fi
+CMAKE_GENERATOR="Ninja"
 
 for arch in $ARCHS; do
     rm -rf build-$arch
@@ -58,7 +41,8 @@ for arch in $ARCHS; do
     cd build-$arch
     rm -rf CMake*
     cmake \
-        ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_GENERATOR="Ninja" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$PREFIX/$arch-w64-mingw32" \
         -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \
@@ -87,10 +71,11 @@ for arch in $ARCHS; do
         -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
         -DLIBCXXABI_ENABLE_SHARED=OFF \
         -DLIBCXXABI_LIBDIR_SUFFIX="" \
-        -D__USE_MINGW_ANSI_STDIO=1 \
+        -DCMAKE_C_FLAGS_INIT="-D__USE_MINGW_ANSI_STDIO=1" \
+        -DCMAKE_CXX_FLAGS_INIT="-D__USE_MINGW_ANSI_STDIO=1" \
         ..
 
-    cmake --build . ${CORES:+-j${CORES}}
+    cmake --build .
     cmake --install .
     cd ..
 done

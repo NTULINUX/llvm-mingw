@@ -17,30 +17,22 @@
 set -ex
 
 PREFIX="$1"
-if [ -z "$CHECKOUT_ONLY" ]; then
-    if [ -z "$PREFIX" ]; then
-        echo $0 dest
-        exit 1
-    fi
-
-    mkdir -p "$PREFIX"
-    PREFIX="$(cd "$PREFIX" && pwd)"
+if [ -z "$PREFIX" ]; then
+    echo $0 dest
+    exit 1
 fi
+mkdir -p "$PREFIX"
+PREFIX="$(cd "$PREFIX" && pwd)"
 
-if [ ! -d mingw-w64 ] || [ -n "$SYNC" ]; then
-    CHECKOUT_ONLY=1 ./build-mingw-w64.sh
+if [ ! -d mingw-w64 ]; then
+    git clone --depth=1 https://github.com/mingw-w64/mingw-w64
 fi
 
 cd mingw-w64
 
-MAKE=make
-if command -v gmake >/dev/null; then
-    MAKE=gmake
-fi
+MAKE=gmake
 
-: ${CORES:=$(nproc 2>/dev/null)}
-: ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-: ${CORES:=4}
+CORES=$(nproc)
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 : ${TARGET_OSES:=${TOOLCHAIN_TARGET_OSES-mingw32}}
 

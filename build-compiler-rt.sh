@@ -20,20 +20,11 @@ SRC_DIR=../lib/builtins
 BUILD_SUFFIX=
 BUILD_BUILTINS=TRUE
 
-while [ $# -gt 0 ]; do
-    if [ "$1" = "--native" ]; then
-        NATIVE=1
-        SRC_DIR=..
-    else
-        PREFIX="$1"
-    fi
-    shift
-done
+PREFIX="$1"
 if [ -z "$PREFIX" ]; then
     echo "$0 [--native] dest"
     exit 1
 fi
-
 mkdir -p "$PREFIX"
 PREFIX="$(cd "$PREFIX" && pwd)"
 export PATH="$PREFIX/bin:$PATH"
@@ -42,63 +33,9 @@ export PATH="$PREFIX/bin:$PATH"
 
 CLANG_RESOURCE_DIR="$("$PREFIX/bin/clang" --print-resource-dir)"
 
-if [ ! -d llvm-project/compiler-rt ] || [ -n "$SYNC" ]; then
-    CHECKOUT_ONLY=1 ./build-llvm.sh
-fi
-
-if command -v ninja >/dev/null; then
-    CMAKE_GENERATOR="Ninja"
-else
-    : ${CORES:=$(nproc 2>/dev/null)}
-    : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-    : ${CORES:=4}
-
-    case $(uname) in
-    MINGW*)
-        CMAKE_GENERATOR="MSYS Makefiles"
-        ;;
-    esac
-fi
-
 cd llvm-project/compiler-rt
 
 INSTALL_PREFIX="$CLANG_RESOURCE_DIR"
-
-if [ -h "$CLANG_RESOURCE_DIR/include" ]; then
-    # Symlink to system headers; use a staging directory in case parts
-    # of the resource dir are immutable
-    WORKDIR="$(mktemp -d)"; trap "rm -rf $WORKDIR" 0
-    INSTALL_PREFIX="$WORKDIR/install"
-fi
-
-if [ -n "$NATIVE" ]; then
-    rm -rf build-native
-    mkdir -p build-native
-    cd build-native
-    rm -rf CMake*
-    cmake \
-        ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$CLANG_RESOURCE_DIR" \
-        -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-        -DLLVM_CONFIG_PATH="" \
-        -DCMAKE_FIND_ROOT_PATH=$PREFIX \
-        -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-        -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
-        -DCOMPILER_RT_USE_LIBCXX=OFF \
-        $SRC_DIR
-    cmake --build . ${CORES:+-j${CORES}}
-    cmake --install . --prefix "$INSTALL_PREFIX"
-
-    if [ "$INSTALL_PREFIX" != "$CLANG_RESOURCE_DIR" ]; then
-        # symlink to system headers - skip copy
-        rm -rf "$INSTALL_PREFIX/include"
-
-        cp -r "$INSTALL_PREFIX/." $CLANG_RESOURCE_DIR
-    fi
-    exit 0
-fi
 
 for arch in $ARCHS; do
     rm -rf build-$arch$BUILD_SUFFIX
@@ -106,7 +43,8 @@ for arch in $ARCHS; do
     cd build-$arch$BUILD_SUFFIX
     rm -rf CMake*
     cmake \
-        ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_GENERATOR="Ninja" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$CLANG_RESOURCE_DIR" \
         -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \
@@ -125,16 +63,9 @@ for arch in $ARCHS; do
         -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
         -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
         $SRC_DIR
-    cmake --build . ${CORES:+-j${CORES}}
+    cmake --build .
 
     cmake --install . --prefix "$INSTALL_PREFIX"
     mkdir -p "$PREFIX/$arch-w64-mingw32/bin"
     cd ..
 done
-
-if [ "$INSTALL_PREFIX" != "$CLANG_RESOURCE_DIR" ]; then
-    # symlink to system headers - skip copy
-    rm -rf "$INSTALL_PREFIX/include"
-
-    cp -r "$INSTALL_PREFIX/." $CLANG_RESOURCE_DIR
-fi

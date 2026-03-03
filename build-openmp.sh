@@ -29,25 +29,9 @@ export PATH="$PREFIX/bin:$PATH"
 
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
-if [ ! -d llvm-project/openmp ] || [ -n "$SYNC" ]; then
-    CHECKOUT_ONLY=1 ./build-llvm.sh
-fi
-
 cd llvm-project/runtimes
 
-if command -v ninja >/dev/null; then
-    CMAKE_GENERATOR="Ninja"
-else
-    : ${CORES:=$(nproc 2>/dev/null)}
-    : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-    : ${CORES:=4}
-
-    case $(uname) in
-    MINGW*)
-        CMAKE_GENERATOR="MSYS Makefiles"
-        ;;
-    esac
-fi
+CMAKE_GENERATOR="Ninja"
 
 for arch in $ARCHS; do
     CMAKEFLAGS=""
@@ -76,7 +60,7 @@ for arch in $ARCHS; do
         -DLLVM_ENABLE_RUNTIMES="openmp" \
         $CMAKEFLAGS \
         ..
-    cmake --build . ${CORES:+-j${CORES}}
+    cmake --build .
     cmake --install .
     rm -f $PREFIX/$arch-w64-mingw32/bin/*iomp5md*
     rm -f $PREFIX/$arch-w64-mingw32/lib/*iomp5md*

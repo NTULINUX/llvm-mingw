@@ -16,56 +16,24 @@
 
 set -ex
 
-: ${MINGW_W64_VERSION:=43f2643cbde20aff1c4b89a98c78d0b4b0fe90c2}
-
 PREFIX="$1"
-if [ -z "$CHECKOUT_ONLY" ]; then
-    if [ -z "$PREFIX" ]; then
-        echo "$0 dest"
-        exit 1
-    fi
-
-    mkdir -p "$PREFIX"
-    PREFIX="$(cd "$PREFIX" && pwd)"
+if [ -z "$PREFIX" ]; then
+    echo "$0 dest"
+    exit 1
 fi
-
-if [ ! -d mingw-w64 ]; then
-    git clone https://github.com/mingw-w64/mingw-w64
-    CHECKOUT=1
-fi
+mkdir -p "$PREFIX"
+PREFIX="$(cd "$PREFIX" && pwd)"
 
 cd mingw-w64
 
-if [ -n "$SYNC" ] || [ -n "$CHECKOUT" ]; then
-    [ -z "$SYNC" ] || git fetch
-    git checkout $MINGW_W64_VERSION
-fi
-
-[ -z "$CHECKOUT_ONLY" ] || exit 0
-
-MAKE=make
-if command -v gmake >/dev/null; then
-    MAKE=gmake
-fi
-
-case $(uname) in
-MINGW*|MSYS*|CYGWIN*)
-    CRT_CONFIG_FLAGS="--disable-dependency-tracking"
-    ;;
-esac
+MAKE=gmake
 
 export PATH="$PREFIX/bin:$PATH"
 
-: ${CORES:=$(nproc 2>/dev/null)}
-: ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-: ${CORES:=4}
+CORES=$(nproc)
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
 
-if [ -z "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
-    HEADER_ROOT="$PREFIX/generic-w64-mingw32"
-else
-    HEADER_ROOT="$PREFIX"
-fi
+HEADER_ROOT="$PREFIX/generic-w64-mingw32"
 
 cd mingw-w64-headers
 rm -rf build
@@ -76,14 +44,12 @@ CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
     --enable-idl --with-default-win32-winnt=0x0A00 --with-default-msvcrt=ucrt INSTALL="install -C"
 $MAKE install
 cd ../..
-if [ -z "$SKIP_INCLUDE_TRIPLET_PREFIX" ]; then
-    for arch in $ARCHS; do
-        mkdir -p "$PREFIX/$arch-w64-mingw32"
-        if [ ! -e "$PREFIX/$arch-w64-mingw32/include" ]; then
-            ln -sfn ../generic-w64-mingw32/include "$PREFIX/$arch-w64-mingw32/include"
-        fi
-    done
-fi
+for arch in $ARCHS; do
+    mkdir -p "$PREFIX/$arch-w64-mingw32"
+    if [ ! -e "$PREFIX/$arch-w64-mingw32/include" ]; then
+        ln -sfn ../generic-w64-mingw32/include "$PREFIX/$arch-w64-mingw32/include"
+    fi
+done
 
 cd mingw-w64-crt
 for arch in $ARCHS; do

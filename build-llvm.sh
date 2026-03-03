@@ -26,18 +26,9 @@ if [ -n "$PREFIX" ]; then
     exit 1
 fi
 PREFIX="$1"
-
-BUILDDIR="$BUILDDIR"
-if [ -z "$CHECKOUT_ONLY" ]; then
-    if [ -z "$PREFIX" ]; then
-        echo $0 [--host=triple] dest
-        exit 1
-    fi
-
-    if [ "$INSTRUMENTED" = "OFF" ]; then
-        mkdir -p "$PREFIX"
-        PREFIX="$(cd "$PREFIX" && pwd)"
-    fi
+if [ -z "$PREFIX" ]; then
+    echo $0 dest
+    exit 1
 fi
 
 if [ ! -d llvm-project ]; then
@@ -49,56 +40,13 @@ if [ ! -d llvm-project ]; then
     CHECKOUT=1
 fi
 
-if [ -n "$SYNC" ] || [ -n "$CHECKOUT" ]; then
-    cd llvm-project
-    # Check if the intended commit or tag exists in the local repo. If it
-    # exists, just check it out instead of trying to fetch it.
-    # (Redoing a shallow fetch will refetch the data even if the commit
-    # already exists locally, unless fetching a tag with the "tag"
-    # argument.)
-    if git cat-file -e "$LLVM_VERSION" 2> /dev/null; then
-        # Exists; just check it out
-        git checkout "$LLVM_VERSION"
-    else
-        case "$LLVM_VERSION" in
-        llvmorg-*)
-            # If $LLVM_VERSION looks like a tag, fetch it with the
-            # "tag" keyword. This makes sure that the local repo
-            # gets the tag too, not only the commit itself. This allows
-            # later fetches to realize that the tag already exists locally.
-            git fetch --depth 1 origin tag "$LLVM_VERSION"
-            git checkout "$LLVM_VERSION"
-            ;;
-        *)
-            git fetch --depth 1 origin "$LLVM_VERSION"
-            git checkout FETCH_HEAD
-            ;;
-        esac
-    fi
-    cd ..
-fi
-
-[ -z "$CHECKOUT_ONLY" ] || exit 0
-
-if command -v ninja >/dev/null; then
-    CMAKE_GENERATOR="Ninja"
-else
-    : ${CORES:=$(nproc 2>/dev/null)}
-    : ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-    : ${CORES:=4}
-
-    case $(uname) in
-    MINGW*)
-        CMAKE_GENERATOR="MSYS Makefiles"
-        ;;
-    esac
-fi
+CMAKE_GENERATOR="Ninja"
 
 CMAKEFLAGS="$LLVM_CMAKEFLAGS"
 CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER=clang"
 CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER=clang++"
 CMAKEFLAGS="$CMAKEFLAGS -DLLVM_USE_LINKER=lld"
-CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
+#CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
 
 cd llvm-project/llvm
 
@@ -110,7 +58,7 @@ cd $BUILDDIR
 
 rm -rf CMake*
 cmake \
-    ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
+    -DCMAKE_GENERATOR="Ninja" \
     -DCMAKE_INSTALL_PREFIX="$PREFIX" \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=OFF \
@@ -126,7 +74,7 @@ cmake \
     $CMAKEFLAGS \
     ..
 
-    VERBOSE=1 cmake --build . ${CORES:+-j${CORES}}
+    VERBOSE=1 cmake --build .
     cmake --install . --strip
 
     cp ../LICENSE.TXT $PREFIX

@@ -28,14 +28,8 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 export PATH="$PREFIX/bin:$PATH"
 unset CC
 
-: ${CORES:=$(nproc 2>/dev/null)}
-: ${CORES:=$(sysctl -n hw.ncpu 2>/dev/null)}
-: ${CORES:=4}
+CORES=$(nproc)
 : ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
-
-if [ ! -d mingw-w64 ] || [ -n "$SYNC" ]; then
-    CHECKOUT_ONLY=1 ./build-mingw-w64.sh
-fi
 
 MAKE=make
 if command -v gmake >/dev/null; then
