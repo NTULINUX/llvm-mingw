@@ -16,9 +16,14 @@ Main changes include:
  - Remove Docker
  - Remove CI/CD
  - Remove tests
- - Remove many features such as CFI and sanitizers (this list is very long)
+ - Remove many features such as CFI, python, busybox, sanitizers (this list is very long)
  - Simplify all Bash scripts and remove pretty much everything else (ARM, Mac support, etc.)
    This does remove a lot of flexibility, support, and control but should also help
    avoid a few bugs. This is a very minimalistic LLVM MinGW toolchain and should
    only be used if you know you do not need any additional features such as profiling.
    I am personally using this to simply compile Wine and DXVK.
+
+Building
+----------
+
+`./build-all.sh "${HOME}/llvm-mingw"`
