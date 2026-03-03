@@ -16,8 +16,7 @@
 
 set -ex
 
-: ${LLVM_REPOSITORY:=https://github.com/llvm/llvm-project.git}
-: ${LLVM_VERSION:=llvmorg-22.1.0}
+LLVM_BRANCH="release/22.x"
 
 BUILDDIR="build"
 
@@ -32,15 +31,12 @@ if [ -z "$PREFIX" ]; then
 fi
 
 if [ ! -d llvm-project ]; then
-    mkdir llvm-project
+    git clone --depth=1 --single-branch -b "${LLVM_BRANCH}" https://github.com/llvm/llvm-project.git
+else
     cd llvm-project
-    git init
-    git remote add origin "${LLVM_REPOSITORY}"
+    git pull
     cd ..
-    CHECKOUT=1
 fi
-
-CMAKE_GENERATOR="Ninja"
 
 CMAKEFLAGS="$LLVM_CMAKEFLAGS"
 CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER=clang"

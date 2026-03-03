@@ -47,7 +47,7 @@ for arch in $ARCHS; do
     rm -rf CMake*
 
     cmake \
-        ${CMAKE_GENERATOR+-G} "$CMAKE_GENERATOR" \
+        -DCMAKE_GENERATOR="Ninja" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$PREFIX/$arch-w64-mingw32" \
         -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \

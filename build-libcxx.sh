@@ -33,8 +33,6 @@ cd llvm-project
 
 cd runtimes
 
-CMAKE_GENERATOR="Ninja"
-
 for arch in $ARCHS; do
     rm -rf build-$arch
     mkdir -p build-$arch
