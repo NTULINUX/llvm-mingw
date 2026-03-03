@@ -87,6 +87,7 @@ for arch in $ARCHS; do
         -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
         -DLIBCXXABI_ENABLE_SHARED=OFF \
         -DLIBCXXABI_LIBDIR_SUFFIX="" \
+        -D__USE_MINGW_ANSI_STDIO=1 \
         ..
 
     cmake --build . ${CORES:+-j${CORES}}
