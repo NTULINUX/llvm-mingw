@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright (c) 2020 Martin Storsjo
+# Copyright (c) 2026 Alec Ari
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-set -ex
+set -e
 
 PREFIX="$1"
 if [ -z "$PREFIX" ]; then
