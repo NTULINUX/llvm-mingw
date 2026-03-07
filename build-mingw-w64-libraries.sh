@@ -37,23 +37,19 @@ if command -v gmake >/dev/null; then
     MAKE=gmake
 fi
 
-cd mingw-w64/mingw-w64-libraries
-for lib in winpthreads winstorecompat; do
-    cd $lib
-    for arch in $ARCHS; do
-        rm -rf build-$arch
-        mkdir -p build-$arch
-        cd build-$arch
-        arch_prefix="$PREFIX/$arch-w64-mingw32"
-        CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang+" ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
-            --enable-silent-rules \
-            CFLAGS="$USE_CFLAGS" \
-            CXXFLAGS="$USE_CFLAGS"
-        $MAKE -j$CORES
-        $MAKE install
-        cd ..
-        mkdir -p "$arch_prefix/share/mingw32"
-        install -m644 COPYING "$arch_prefix/share/mingw32/COPYING.${lib}.txt"
-    done
+cd mingw-w64/mingw-w64-libraries/winpthreads
+for arch in $ARCHS; do
+    rm -rf build-$arch
+    mkdir -p build-$arch
+    cd build-$arch
+    arch_prefix="$PREFIX/$arch-w64-mingw32"
+    CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
+        --enable-silent-rules \
+        CFLAGS="$USE_CFLAGS" \
+        CXXFLAGS="$USE_CFLAGS"
+    $MAKE -j$CORES
+    $MAKE install
     cd ..
+    mkdir -p "$arch_prefix/share/mingw32"
+    install -m644 COPYING "$arch_prefix/share/mingw32/COPYING.winpthreads.txt"
 done

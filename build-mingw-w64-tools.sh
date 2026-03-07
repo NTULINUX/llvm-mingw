@@ -61,7 +61,6 @@ $MAKE -j$CORES
 $MAKE install-strip
 mkdir -p "$PREFIX/share/widl"
 install -m644 ../../../COPYING "$PREFIX/share/widl/COPYING.txt"
-cd ..
 cd "$PREFIX/bin"
 # The build above produced $ANY_ARCH-w64-mingw32-widl, add symlinks to it
 # with other prefixes.
