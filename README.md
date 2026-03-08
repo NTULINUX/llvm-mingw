@@ -11,8 +11,10 @@ Main changes include:
 
  - Build everything statically! Portability FTW!
  - Build everything with LLVM toolchain instead of GCC (This requires Clang)
- - Bump MinGW target to 0X0AA (Windows 10 instead of 7)
+ - Bump MinGW target to 0x0A00 (Windows 10 instead of 7)
  - Complete re-work of toolchain wrappers
+ - ThinLTO enabled build
+ - Polly optimizations enabled by default (-O3 -mllvm -polly)
  - Remove Docker
  - Remove CI/CD
  - Remove tests
