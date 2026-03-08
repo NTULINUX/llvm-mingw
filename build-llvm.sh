@@ -47,7 +47,7 @@ CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
 
 cd llvm-project/llvm
 
-PROJECTS="clang;lld"
+PROJECTS="clang;lld;polly"
 
 rm -rf $BUILDDIR
 mkdir -p $BUILDDIR
