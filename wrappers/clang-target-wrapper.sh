@@ -69,4 +69,4 @@ esac
 FLAGS+=("-target" "${TARGET}")
 FLAGS+=("--end-no-unused-arguments")
 
-$CCACHE "${CLANG}" "${FLAGS[@]}" "${@}"
+"${CCACHE}" "${CLANG}" "${FLAGS[@]}" "${@}"

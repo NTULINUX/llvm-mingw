@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
+# Copyright (c) 2026 Alec Ari
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -21,83 +22,21 @@ if [ -z "${PREFIX}" ]; then
     echo "${0} dest"
     exit 1
 fi
-cd "${PREFIX}/bin"
 
-for i in amdgpu-arch bugpoint c-index-test clang-* clangd clangd-* darwin-debug diagtool dsymutil find-all-symbols git-clang-format hmaptool ld64.lld* llc lldb-* lli llvm-* modularize nvptx-arch obj2yaml offload-arch opt pp-trace sancov sanstats scan-build scan-view split-file verify-uselistorder wasm-ld yaml2* libclang.dll *LTO.dll *Remarks.dll *.bat; do
-    basename="${i}"
-    case $basename in
-    *.sh)
-        ;;
-    clang++|clang-*.*|clang-cpp)
-        ;;
-    clang-format|git-clang-format)
-        ;;
-    clangd)
-        ;;
-    clang-scan-deps)
-        ;;
-    clang-tidy)
-        ;;
-    clang-target-wrapper*|clang-scan-deps-wrapper*)
-        ;;
-    clang-*)
-        suffix="${basename#*-}"
-        # Test removing all numbers from the suffix; if it is empty, the suffix
-        # was a plain number (as if the original name was clang-7); if it wasn't
-        # empty, remove the tool.
-        if [ "$(echo "${suffix}" | tr -d 0-9)" != "" ]; then
-            rm -f "${i}"
-        fi
-        ;;
-    llvm-ar|llvm-cvtres|llvm-dlltool|llvm-nm|llvm-objdump|llvm-ranlib|llvm-rc|llvm-readobj|llvm-strings|llvm-pdbutil|llvm-objcopy|llvm-strip|llvm-cov|llvm-profdata|llvm-addr2line|llvm-symbolizer|llvm-wrapper|llvm-windres|llvm-ml|llvm-readelf|llvm-size|llvm-cxxfilt|llvm-lib)
-        ;;
-    ld64.lld|wasm-ld)
-        if [ -e "$i" ]; then
-            rm "${i}"
-        fi
-        ;;
-    lldb|lldb-server|lldb-argdumper|lldb-instr|lldb-mi|lldb-vscode|lldb-dap)
-        ;;
-    *)
-        if [ -f "${i}" ]; then
-            rm "${i}"
-        elif [ -L "${i}" ] && [ ! -e "$(readlink "${i}")" ]; then
-            # Remove dangling symlinks
-            rm "${i}"
-        fi
-        ;;
-    esac
-done
-cd ..
-rm -rf libexec
-cd share
-cd clang
-for i in *; do
-    case $i in
-    clang-format*)
-        ;;
-    *)
-        rm -rf "${i}"
-        ;;
-    esac
-done
-cd ..
-rm -rf opt-viewer scan-build scan-view
-rm -rf man/man1/scan-build*
-cd ..
-cd include
-rm -rf clang clang-c clang-tidy lld llvm llvm-c lldb
-cd ..
-cd lib
-rm -f ./*.dll.a
-rm -f lib*.a
-for i in *.so* *.dylib* cmake; do
-    case ${i} in
-    liblldb*|libclang-cpp*|libLLVM*)
-        ;;
-    *)
-        rm -rf "${i}"
-        ;;
-    esac
-done
-cd ..
+rm -rf "${PREFIX:?}"/{libexec,share/{opt-viewer,scan-build,scan-view,man/man1/scan-build*},include/{clang,clang-c,clang-tidy,lld,llvm,llvm-c,lldb}}
+
+find "${PREFIX:?}/bin" -mindepth 1 -maxdepth 1 \( \
+    -name "amdgpu-arch" -o -name "bugpoint" -o -name "c-index-test" -o -name "clangd-*" -o \
+    -name "darwin-debug" -o -name "diagtool" -o -name "dsymutil" -o -name "find-all-symbols" -o \
+    -name "hmaptool" -o -name "ld64.lld*" -o -name "llc" -o -name "lldb-*" -o -name "lli" -o \
+    -name "modularize" -o -name "nvptx-arch" -o -name "obj2yaml" -o -name "offload-arch" -o -name "opt" -o \
+    -name "pp-trace" -o -name "sancov" -o -name "sanstats" -o -name "scan-build" -o \
+    -name "scan-view" -o -name "split-file" -o -name "verify-uselistorder" -o -name "wasm-ld" -o \
+    -name "yaml2*" -o -name "libclang.dll" -o -name "*LTO.dll" -o -name "*Remarks.dll" -o -name "*.bat" -o \
+    \( -name "clang-*" ! -name "*[0-9]" ! -name "clang-scan-deps" ! -name "clang-cpp" ! -name "clang-format" \) \) -delete
+
+find "${PREFIX:?}/lib" -mindepth 1 -maxdepth 1 \( \
+    -name "*.so*" -o -name "*.dylib*" -o -name "cmake" -o \
+    -name "*.a" -o -name "*.dll.a" \) -exec rm -rf {} +
+
+find "${PREFIX:?}/share/clang" -mindepth 1 -maxdepth 1 ! -name "clang-format*" -exec rm -rf {} +
