@@ -36,7 +36,7 @@ else
 fi
 
 # Comment the line below to drastically speed up build
-# LTO=("-DLLVM_ENABLE_LTO=thin")
+LTO=("-DLLVM_ENABLE_LTO=thin")
 
 cd "llvm-project/llvm"
 
