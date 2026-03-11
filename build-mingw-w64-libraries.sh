@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,39 +17,30 @@
 
 set -e
 
-USE_CFLAGS="-O2"
-
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo "$0 dest"
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
-mkdir -p "$PREFIX"
-PREFIX="$(cd "$PREFIX" && pwd)"
-export PATH="$PREFIX/bin:$PATH"
+export PATH="${PREFIX}/bin:${PATH}"
+
 unset CC
 
 CORES=$(nproc)
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
+ARCHS="i686 x86_64"
 
-MAKE=make
-if command -v gmake >/dev/null; then
-    MAKE=gmake
-fi
-
-cd mingw-w64/mingw-w64-libraries/winpthreads
-for arch in $ARCHS; do
-    rm -rf build-$arch
-    mkdir -p build-$arch
-    cd build-$arch
-    arch_prefix="$PREFIX/$arch-w64-mingw32"
-    CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
-        --enable-silent-rules \
-        CFLAGS="$USE_CFLAGS" \
-        CXXFLAGS="$USE_CFLAGS"
-    $MAKE -j$CORES
-    $MAKE install
+cd "mingw-w64/mingw-w64-libraries/winpthreads"
+for arch in ${ARCHS}; do
+    rm -rf "build-${arch}"
+    mkdir -p "build-${arch}"
+    cd "build-${arch}"
+    arch_prefix="${PREFIX}/${arch}-w64-mingw32"
+    CFLAGS="-O2" CXXFLAGS="-O2" CC="${arch}-w64-mingw32-clang" CXX="${arch}-w64-mingw32-clang++" \
+        ../configure --host="${arch}-w64-mingw32" --prefix="${arch_prefix}" --libdir="${arch_prefix}/lib" \
+        --enable-silent-rules
+    make -j"${CORES}"
+    make install
     cd ..
-    mkdir -p "$arch_prefix/share/mingw32"
-    install -m644 COPYING "$arch_prefix/share/mingw32/COPYING.winpthreads.txt"
+    mkdir -p "${arch_prefix}/share/mingw32"
+    install -m644 COPYING "${arch_prefix}/share/mingw32/COPYING.winpthreads.txt"
 done

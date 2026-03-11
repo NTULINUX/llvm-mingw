@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,26 +17,26 @@
 
 set -e
 
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo "$0 dest"
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
 
 for dep in git cmake clang gmake ninja; do
-    if ! command -v $dep >/dev/null; then
-        echo "$dep not installed. Please install it and retry" 1>&2
+    if ! command -v "${dep}" >/dev/null; then
+        echo "${dep} not installed. Please install it and retry" 1>&2
         exit 1
     fi
 done
 
-./build-llvm.sh $PREFIX
-./strip-llvm.sh $PREFIX
-./install-wrappers.sh $PREFIX
-./build-mingw-w64-tools.sh $PREFIX
-./build-mingw-w64.sh $PREFIX
-./build-compiler-rt.sh $PREFIX
-./build-libcxx.sh $PREFIX
-./build-mingw-w64-libraries.sh $PREFIX
-./build-compiler-rt.sh $PREFIX
-./build-openmp.sh $PREFIX
+./build-llvm.sh "${PREFIX}"
+./strip-llvm.sh "${PREFIX}"
+./install-wrappers.sh "${PREFIX}"
+./build-mingw-w64-tools.sh "${PREFIX}"
+./build-mingw-w64.sh "${PREFIX}"
+./build-compiler-rt.sh "${PREFIX}"
+./build-libcxx.sh "${PREFIX}"
+./build-mingw-w64-libraries.sh "${PREFIX}"
+./build-compiler-rt.sh "${PREFIX}"
+./build-openmp.sh "${PREFIX}"

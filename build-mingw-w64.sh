@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,74 +17,72 @@
 
 set -e
 
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo "$0 dest"
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
-mkdir -p "$PREFIX"
-PREFIX="$(cd "$PREFIX" && pwd)"
 
-cd mingw-w64
+cd "mingw-w64"
 
-MAKE=gmake
-
-export PATH="$PREFIX/bin:$PATH"
+export PATH="${PREFIX}/bin:${PATH}"
 
 CORES=$(nproc)
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
+ARCHS="i686 x86_64"
 
-HEADER_ROOT="$PREFIX/generic-w64-mingw32"
+HEADER_ROOT="${PREFIX}/generic-w64-mingw32"
 
-cd mingw-w64-headers
-rm -rf build
-mkdir -p build
-cd build
-CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
-    ../configure --prefix="$HEADER_ROOT" \
+cd "mingw-w64-headers"
+rm -rf "build"
+mkdir -p "build"
+cd "build"
+CC="clang" CXX="clang++" LD="ld.lld" \
+    ../configure --prefix="${HEADER_ROOT}" \
     --enable-idl --with-default-win32-winnt=0x0A00 --with-default-msvcrt=ucrt INSTALL="install -C"
-$MAKE install
+make install
 cd ../..
 for arch in $ARCHS; do
-    mkdir -p "$PREFIX/$arch-w64-mingw32"
-    if [ ! -e "$PREFIX/$arch-w64-mingw32/include" ]; then
-        ln -sfn ../generic-w64-mingw32/include "$PREFIX/$arch-w64-mingw32/include"
+    mkdir -p "${PREFIX}/${arch}-w64-mingw32"
+    if [ ! -e "${PREFIX--disable-lib32 --enable-lib64}/${arch}-w64-mingw32/include" ]; then
+        ln -sfn "../generic-w64-mingw32/include" "${PREFIX}/${arch}-w64-mingw32/include"
     fi
 done
 
-cd mingw-w64-crt
+cd "mingw-w64-crt"
 for arch in $ARCHS; do
-    rm -rf build-$arch
-    mkdir -p build-$arch
-    cd build-$arch
+    rm -rf "build-${arch}"
+    mkdir -p "build-${arch}"
+    cd "build-${arch}"
     case $arch in
     i686)
-        FLAGS="--enable-lib32 --disable-lib64"
+        FLAGS=("--enable-lib32" "--disable-lib64")
         ;;
     x86_64)
-        FLAGS="--disable-lib32 --enable-lib64"
+        FLAGS=("--disable-lib32" "--enable-lib64")
         ;;
     esac
-    FLAGS="$FLAGS --with-default-msvcrt=ucrt"
-    FLAGS="$FLAGS --enable-silent-rules"
-    CC="$arch-w64-mingw32-clang" CXX="$arch-w64-mingw32-clang++" LD="ld.lld" \
-        ../configure --host=$arch-w64-mingw32 --prefix="$PREFIX/$arch-w64-mingw32" $FLAGS $CRT_CONFIG_FLAGS
-    $MAKE -j$CORES
-    $MAKE install
+    FLAGS+=("--with-default-msvcrt=ucrt")
+    FLAGS+=("--enable-silent-rules")
+    ../configure \
+        --host="$arch-w64-mingw32" \
+        --prefix="$PREFIX/$arch-w64-mingw32" \
+        "${FLAGS[@]}"
+    make -j"${CORES}"
+    make install
     cd ..
 done
 cd ..
 
 for arch in $ARCHS; do
-    if [ ! -f $PREFIX/$arch-w64-mingw32/lib/libssp.a ]; then
+    if [ ! -f "${PREFIX}/${arch}-w64-mingw32/lib/libssp.a" ]; then
         # Create empty dummy archives, to avoid failing when the compiler
         # driver adds "-lssp -lssh_nonshared" when linking.
-        llvm-ar rcs $PREFIX/$arch-w64-mingw32/lib/libssp.a
-        llvm-ar rcs $PREFIX/$arch-w64-mingw32/lib/libssp_nonshared.a
+        llvm-ar rcs "$PREFIX/${arch}-w64-mingw32/lib/libssp.a"
+        llvm-ar rcs "$PREFIX/${arch}-w64-mingw32/lib/libssp_nonshared.a"
     fi
 
-    mkdir -p "$PREFIX/$arch-w64-mingw32/share/mingw32"
+    mkdir -p "${PREFIX}/${arch}-w64-mingw32/share/mingw32"
     for file in COPYING COPYING.MinGW-w64/COPYING.MinGW-w64.txt COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt; do
-        install -m644 "$file" "$PREFIX/$arch-w64-mingw32/share/mingw32"
+        install -m644 "${file}" "${PREFIX}/${arch}-w64-mingw32/share/mingw32"
     done
 done

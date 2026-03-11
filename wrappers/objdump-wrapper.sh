@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 #
@@ -15,40 +15,40 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 get_dir() {
-    target="$1"
-    while [ -L "$target" ]; do
-        cd "$(dirname "$target")"
-        target="$(readlink "$(basename "$target")")"
+    target="${1}"
+    while [ -L "${target}" ]; do
+        cd "$(dirname "${target}")" || exit
+        target="$(readlink "$(basename "${target}")")"
     done
-    cd "$(dirname "$target")"
+    cd "$(dirname "${target}")" || exit
     pwd
 }
 
-DIR="$(get_dir "$0")"
-export PATH="$DIR":"$PATH"
+DIR="$(get_dir "${0}")"
+export PATH="${DIR}:${PATH}"
 
-if [ "$1" = "-f" ]; then
+if [ "${1}" = "-f" ]; then
     # libtool can try to run objdump -f and wants to see certain strings in
     # the output, to accept it being a windows (import) library
-    llvm-readobj $2 | while read -r line; do
+    llvm-readobj "${2}" | while read -r line; do
         case $line in
         File:*)
-            file=$(echo $line | awk '{print $2}')
+            file=$(echo "${line}" | awk '{print $2}')
             ;;
         Format:*)
-            format=$(echo $line | awk '{print $2}')
-            case $format in
+            format=$(echo "${line}" | awk '{print $2}')
+            case "${format}" in
             COFF-i386)
-                format=pe-i386
+                format="pe-i386"
                 ;;
             COFF-x86-64)
-                format=pe-x86-64
+                format="pe-x86-64"
                 ;;
             esac
-            echo $file: file format $format
+            echo "${file}": file format "${format}"
             ;;
         esac
     done
 else
-    llvm-objdump "$@"
+    llvm-objdump "${@}"
 fi

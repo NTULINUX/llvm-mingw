@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 #
@@ -15,29 +15,31 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 get_dir() {
-    target="$1"
-    while [ -L "$target" ]; do
-        cd "$(dirname "$target")"
-        target="$(readlink "$(basename "$target")")"
+    target="${1}"
+    while [ -L "${target}" ]; do
+        cd "$(dirname "${target}")" || exit
+        target="$(readlink "$(basename "${target}")")"
     done
-    cd "$(dirname "$target")"
+    cd "$(dirname "${target}")" || exit
     pwd
 }
 
-DIR="$(get_dir "$0")"
-export PATH="$DIR":"$PATH"
+DIR="$(get_dir "${0}")"
+export PATH="${DIR}":"${PATH}"
 
-BASENAME="$(basename "$0")"
+BASENAME="$(basename "${0}")"
 TARGET="${BASENAME%-*}"
-DEFAULT_TARGET=x86_64-w64-mingw32
-if [ "$TARGET" = "$BASENAME" ]; then
-    TARGET=$DEFAULT_TARGET
+DEFAULT_TARGET="x86_64-w64-mingw32"
+if [ "${TARGET}" = "${BASENAME}" ]; then
+    TARGET="${DEFAULT_TARGET}"
 fi
 ARCH="${TARGET%%-*}"
-TARGET_OS="${TARGET##*-}"
 case $ARCH in
-i686)    M=i386pe    ;;
-x86_64)  M=i386pep   ;;
+i686)
+    FLAGS=("i386pe")
+    ;;
+x86_64)
+    FLAGS=("i386pep")
+    ;;
 esac
-FLAGS="-m $M"
-ld.lld $FLAGS "$@"
+ld.lld -m "${FLAGS[@]}" "${@}"

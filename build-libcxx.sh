@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,41 +17,36 @@
 
 set -e
 
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo "$0 dest"
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
 
-mkdir -p "$PREFIX"
-PREFIX="$(cd "$PREFIX" && pwd)"
+export PATH="${PREFIX}/bin:${PATH}"
 
-export PATH="$PREFIX/bin:$PATH"
+ARCHS="i686 x86_64"
 
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
+cd "llvm-project/runtimes"
 
-cd llvm-project
-
-cd runtimes
-
-for arch in $ARCHS; do
-    rm -rf build-$arch
-    mkdir -p build-$arch
-    cd build-$arch
+for arch in ${ARCHS}; do
+    rm -rf "build-${arch}"
+    mkdir -p "build-${arch}"
+    cd "build-${arch}"
     rm -rf CMake*
     cmake \
         -DBUILD_SHARED_LIBS=OFF \
-        -DCMAKE_GENERATOR="Ninja" \
+        -DCMAKE_GENERATOR=Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$PREFIX/$arch-w64-mingw32" \
-        -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \
-        -DCMAKE_CXX_COMPILER=$arch-w64-mingw32-clang++ \
-        -DCMAKE_CXX_COMPILER_TARGET=$arch-w64-windows-gnu \
+        -DCMAKE_INSTALL_PREFIX="${PREFIX}/${arch}-w64-mingw32" \
+        -DCMAKE_C_COMPILER="${arch}-w64-mingw32-clang" \
+        -DCMAKE_CXX_COMPILER="${arch}-w64-mingw32-clang++" \
+        -DCMAKE_CXX_COMPILER_TARGET="${arch}-w64-windows-gnu" \
         -DCMAKE_SYSTEM_NAME=Windows \
         -DCMAKE_C_COMPILER_WORKS=TRUE \
         -DCMAKE_CXX_COMPILER_WORKS=TRUE \
-        -DCMAKE_AR="$PREFIX/bin/llvm-ar" \
-        -DCMAKE_RANLIB="$PREFIX/bin/llvm-ranlib" \
+        -DCMAKE_AR="${PREFIX}/bin/llvm-ar" \
+        -DCMAKE_RANLIB="${PREFIX}/bin/llvm-ranlib" \
         -DLLVM_ENABLE_RUNTIMES="libunwind;libcxxabi;libcxx" \
         -DLIBUNWIND_USE_COMPILER_RT=TRUE \
         -DLIBUNWIND_ENABLE_SHARED=OFF \
@@ -64,7 +59,7 @@ for arch in $ARCHS; do
         -DLIBCXX_LIBDIR_SUFFIX="" \
         -DLIBCXX_INCLUDE_TESTS=FALSE \
         -DLIBCXX_INSTALL_MODULES=ON \
-        -DLIBCXX_INSTALL_MODULES_DIR="$PREFIX/share/libc++/v1" \
+        -DLIBCXX_INSTALL_MODULES_DIR="${PREFIX}/share/libc++/v1" \
         -DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=FALSE \
         -DLIBCXXABI_USE_COMPILER_RT=ON \
         -DLIBCXXABI_USE_LLVM_UNWINDER=ON \

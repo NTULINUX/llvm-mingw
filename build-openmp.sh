@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2020 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,53 +17,49 @@
 
 set -e
 
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo "$0 dest"
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
 
-mkdir -p "$PREFIX"
-PREFIX="$(cd "$PREFIX" && pwd)"
+export PATH="${PREFIX}/bin:${PATH}"
 
-export PATH="$PREFIX/bin:$PATH"
+ARCHS="i686 x86_64"
 
-: ${ARCHS:=${TOOLCHAIN_ARCHS-i686 x86_64}}
+cd "llvm-project/runtimes"
 
-cd llvm-project/runtimes
-
-CMAKE_GENERATOR="Ninja"
-
-for arch in $ARCHS; do
-    CMAKEFLAGS=""
-    case $arch in
+for arch in ${ARCHS}; do
+    CMAKEFLAGS=()
+    case ${arch} in
     x86_64)
-        CMAKEFLAGS="$CMAKEFLAGS -DLIBOMP_ASMFLAGS=-m64"
+        CMAKEFLAGS=("-DLIBOMP_ASMFLAGS=-m64")
         ;;
     esac
 
-    rm -rf build-openmp-$arch
-    mkdir -p build-openmp-$arch
-    cd build-openmp-$arch
+    rm -rf "build-openmp-${arch}"
+    mkdir -p "build-openmp-${arch}"
+    cd "build-openmp-${arch}"
     rm -rf CMake*
 
     cmake \
-        -DCMAKE_GENERATOR="Ninja" \
+        -DCMAKE_GENERATOR=Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$PREFIX/$arch-w64-mingw32" \
-        -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang \
-        -DCMAKE_CXX_COMPILER=$arch-w64-mingw32-clang++ \
-        -DCMAKE_RC_COMPILER=$arch-w64-mingw32-windres \
+        -DCMAKE_INSTALL_PREFIX="${PREFIX}/${arch}-w64-mingw32" \
+        -DCMAKE_C_COMPILER="${arch}-w64-mingw32-clang" \
+        -DCMAKE_CXX_COMPILER="${arch}-w64-mingw32-clang"++ \
+        -DCMAKE_RC_COMPILER="${arch}-w64-mingw32-windres" \
         -DCMAKE_ASM_MASM_COMPILER=llvm-ml \
         -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_AR="$PREFIX/bin/llvm-ar" \
-        -DCMAKE_RANLIB="$PREFIX/bin/llvm-ranlib" \
+        -DCMAKE_AR="${PREFIX}/bin/llvm-ar" \
+        -DCMAKE_RANLIB="${PREFIX}/bin/llvm-ranlib" \
         -DLLVM_ENABLE_RUNTIMES="openmp" \
-        $CMAKEFLAGS \
+        "${CMAKEFLAGS[@]}" \
         ..
+
     cmake --build .
     cmake --install .
-    rm -f $PREFIX/$arch-w64-mingw32/bin/*iomp5md*
-    rm -f $PREFIX/$arch-w64-mingw32/lib/*iomp5md*
+    rm -f "${PREFIX}/${arch}-w64-mingw32/bin/"*iomp5md*
+    rm -f "${PREFIX}/${arch}-w64-mingw32/lib/"*iomp5md*
     cd ..
 done

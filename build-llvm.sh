@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,17 +17,13 @@
 
 set -e
 
-LLVM_BRANCH="release/22.x"
+LLVM_BRANCH="main"
 
 BUILDDIR="build"
 
-if [ -n "$PREFIX" ]; then
-    echo Unrecognized parameter $1
-    exit 1
-fi
-PREFIX="$1"
-if [ -z "$PREFIX" ]; then
-    echo $0 dest
+PREFIX="${1}"
+if [ -z "${PREFIX}" ]; then
+    echo "${0} dest"
     exit 1
 fi
 
@@ -39,39 +35,39 @@ else
     cd ..
 fi
 
-CMAKEFLAGS="$LLVM_CMAKEFLAGS"
-CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_C_COMPILER=clang"
-CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_CXX_COMPILER=clang++"
-CMAKEFLAGS="$CMAKEFLAGS -DLLVM_USE_LINKER=lld"
-CMAKEFLAGS="$CMAKEFLAGS -DLLVM_ENABLE_LTO=thin"
+# Comment the line below to drastically speed up build
+# LTO=("-DLLVM_ENABLE_LTO=thin")
 
-cd llvm-project/llvm
+cd "llvm-project/llvm"
 
 PROJECTS="clang;lld;polly"
 
-rm -rf $BUILDDIR
-mkdir -p $BUILDDIR
-cd $BUILDDIR
+rm -rf "${BUILDDIR:?}"
+mkdir -p "${BUILDDIR}"
+cd "${BUILDDIR}"
 
 rm -rf CMake*
 cmake \
-    -DCMAKE_GENERATOR="Ninja" \
-    -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_USE_LINKER=lld \
+    -DCMAKE_GENERATOR=Ninja \
+    -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=OFF \
     -DLLVM_BUILD_STATIC=ON \
     -DLLVM_BUILD_TESTS=OFF \
     -DLLVM_INCLUDE_TESTS=OFF \
     -DCLANG_INCLUDE_TESTS=OFF \
-    -DLLVM_ENABLE_PROJECTS="$PROJECTS" \
+    -DLLVM_ENABLE_PROJECTS="${PROJECTS}" \
     -DLLVM_ENABLE_BINDINGS=OFF \
-    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DLLVM_TARGETS_TO_BUILD=X86 \
     -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
     -DLLVM_TOOLCHAIN_TOOLS="llvm-ar;llvm-ranlib;llvm-objdump;llvm-rc;llvm-cvtres;llvm-nm;llvm-strings;llvm-readobj;llvm-dlltool;llvm-pdbutil;llvm-objcopy;llvm-strip;llvm-cov;llvm-profdata;llvm-addr2line;llvm-symbolizer;llvm-windres;llvm-ml;llvm-readelf;llvm-size;llvm-cxxfilt;llvm-lib" \
-    $CMAKEFLAGS \
+    "${LTO[@]}" \
     ..
 
-    cmake --build .
-    cmake --install . --strip
+cmake --build .
+cmake --install . --strip
 
-    cp ../LICENSE.TXT $PREFIX
+cp ../LICENSE.TXT "${PREFIX}/"

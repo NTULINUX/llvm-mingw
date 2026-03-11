@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
+# Copyright (c) 2026 Alec Ari
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -15,12 +16,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 get_dir() {
-    target="$1"
-    while [ -L "$target" ]; do
-        cd "$(dirname "$target")"
-        target="$(readlink "$(basename "$target")")"
+    target="${1}"
+    while [ -L "${target}" ]; do
+        cd "$(dirname "${target}")" || exit
+        target="$(readlink "$(basename "${target}")")"
     done
-    cd "$(dirname "$target")"
+    cd "$(dirname "${target}")" || exit
     pwd
 }
 
@@ -28,12 +29,10 @@ DIR="$(get_dir "$0")"
 BASENAME="$(basename "$0")"
 TARGET="${BASENAME%-*}"
 EXE="${BASENAME##*-}"
-DEFAULT_TARGET=x86_64-w64-mingw32
-if [ "$TARGET" = "$BASENAME" ]; then
-    TARGET=$DEFAULT_TARGET
+DEFAULT_TARGET="x86_64-w64-mingw32"
+if [ "${TARGET}" = "${BASENAME}" ]; then
+    TARGET="${DEFAULT_TARGET}"
 fi
-ARCH="${TARGET%%-*}"
-TARGET_OS="${TARGET##*-}"
 
 # Check if trying to compile Ada; if we try to do this, invoking clang
 # would end up invoking <triplet>-gcc with the same arguments, which ends
@@ -48,28 +47,26 @@ case "$*" in
 esac
 
 # Allow setting e.g. CCACHE=1 to wrap all building in ccache.
-if [ -n "$CCACHE" ]; then
+if [ -n "${CCACHE}" ]; then
     CCACHE=ccache
 fi
 
 # If changing this wrapper, change clang-target-wrapper.c accordingly.
-CLANG="$DIR/clang"
-FLAGS=""
-FLAGS="$FLAGS --start-no-unused-arguments"
+CLANG="${DIR}/clang"
+FLAGS=("--start-no-unused-arguments")
 case $EXE in
 clang++|g++|c++)
-    FLAGS="$FLAGS --driver-mode=g++"
+    FLAGS+=("--driver-mode=g++")
     ;;
 c99)
-    FLAGS="$FLAGS -std=c99"
+    FLAGS+=("-std=c99")
     ;;
 c11)
-    FLAGS="$FLAGS -std=c11"
+    FLAGS+=("-std=c11")
     ;;
 esac
-LINKER_FLAGS=""
 
-FLAGS="$FLAGS -target $TARGET"
-FLAGS="$FLAGS --end-no-unused-arguments"
+FLAGS+=("-target" "${TARGET}")
+FLAGS+=("--end-no-unused-arguments")
 
-$CCACHE "$CLANG" $FLAGS "$@" $LINKER_FLAGS
+$CCACHE "${CLANG}" "${FLAGS[@]}" "${@}"

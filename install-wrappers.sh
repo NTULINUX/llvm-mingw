@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 Martin Storsjo
 # Copyright (c) 2026 Alec Ari
@@ -17,60 +17,23 @@
 
 set -e
 
-PREFIX="$1"
+PREFIX="${1}"
 if [ -z "$PREFIX" ]; then
-    echo $0 dest
+    echo "${0}" dest
     exit 1
 fi
 
-cp -arLv "wrappers/i686-w64-windows-gnu.cfg" "${PREFIX}/bin/"
-cp -arLv "wrappers/x86_64-w64-windows-gnu.cfg" "${PREFIX}/bin/"
-cp -arLv "wrappers/clang-target-wrapper.sh" "${PREFIX}/bin/"
-cp -arLv "wrappers/ld-wrapper.sh" "${PREFIX}/bin/"
-cp -arLv "wrappers/objdump-wrapper.sh" "${PREFIX}/bin/"
+cp -arLv "wrappers/"* "${PREFIX}/bin/"
 
 cd "${PREFIX}/bin"
-ln -sv clang-scan-deps i686-w64-mingw32-clang-scan-deps
-ln -sv clang-scan-deps x86_64-w64-mingw32-clang-scan-deps
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-as
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-c++
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-clang
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-clang++
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-g++
-ln -sv clang-target-wrapper.sh i686-w64-mingw32-gcc
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-as
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-c++
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-clang
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-clang++
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-g++
-ln -sv clang-target-wrapper.sh x86_64-w64-mingw32-gcc
-ln -sv ld-wrapper.sh i686-w64-mingw32-ld
-ln -sv ld-wrapper.sh x86_64-w64-mingw32-ld
-ln -sv llvm-addr2line i686-w64-mingw32-addr2line
-ln -sv llvm-addr2line x86_64-w64-mingw32-addr2line
-ln -sv llvm-ar i686-w64-mingw32-ar
-ln -sv llvm-ar i686-w64-mingw32-llvm-ar
-ln -sv llvm-ar x86_64-w64-mingw32-ar
-ln -sv llvm-ar x86_64-w64-mingw32-llvm-ar
-ln -sv llvm-dlltool i686-w64-mingw32-dlltool
-ln -sv llvm-dlltool x86_64-w64-mingw32-dlltool
-ln -sv llvm-nm i686-w64-mingw32-nm
-ln -sv llvm-nm x86_64-w64-mingw32-nm
-ln -sv llvm-objcopy i686-w64-mingw32-objcopy
-ln -sv llvm-objcopy x86_64-w64-mingw32-objcopy
-ln -sv llvm-ranlib i686-w64-mingw32-llvm-ranlib
-ln -sv llvm-ranlib i686-w64-mingw32-ranlib
-ln -sv llvm-ranlib x86_64-w64-mingw32-llvm-ranlib
-ln -sv llvm-ranlib x86_64-w64-mingw32-ranlib
-ln -sv llvm-readelf i686-w64-mingw32-readelf
-ln -sv llvm-readelf x86_64-w64-mingw32-readelf
-ln -sv llvm-size i686-w64-mingw32-size
-ln -sv llvm-size x86_64-w64-mingw32-size
-ln -sv llvm-strings i686-w64-mingw32-strings
-ln -sv llvm-strings x86_64-w64-mingw32-strings
-ln -sv llvm-strip i686-w64-mingw32-strip
-ln -sv llvm-strip x86_64-w64-mingw32-strip
-ln -sv llvm-windres i686-w64-mingw32-windres
-ln -sv llvm-windres x86_64-w64-mingw32-windres
-ln -sv objdump-wrapper.sh i686-w64-mingw32-objdump
-ln -sv objdump-wrapper.sh x86_64-w64-mingw32-objdump
+for a in "i686-w64-mingw32" "x86_64-w64-mingw32"; do
+    ln -sv "clang-scan-deps" "${a}-clang-scan-deps"
+    ln -sv "ld-wrapper.sh" "${a}-ld"
+    ln -sv "objdump-wrapper.sh" "${a}-objdump"
+    for b in as c++ clang clang++ g++ gcc; do ln -sv "clang-target-wrapper.sh" "${a}-${b}"; done
+    for b in ar llvm-ar; do ln -sv "llvm-ar" "${a}-${b}"; done
+    for b in ranlib llvm-ranlib; do ln -sv "llvm-ranlib" "${a}-${b}"; done
+    for b in addr2line dlltool nm objcopy readelf size strings strip windres; do
+        ln -sv "llvm-${b}" "${a}-${b}"
+    done
+done
