@@ -19,8 +19,6 @@ set -e
 
 LLVM_BRANCH="main"
 
-BUILDDIR="build"
-
 PREFIX="${1}"
 if [ -z "${PREFIX}" ]; then
     echo "${0} dest"
@@ -42,9 +40,9 @@ cd "llvm-project/llvm"
 
 PROJECTS="clang;lld;polly"
 
-rm -rf "${BUILDDIR:?}"
-mkdir -p "${BUILDDIR}"
-cd "${BUILDDIR}"
+rm -rf "build"
+mkdir -p "build"
+cd "build"
 
 rm -rf CMake*
 cmake \
