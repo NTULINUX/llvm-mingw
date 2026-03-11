@@ -46,11 +46,6 @@ case "$*" in
     ;;
 esac
 
-# Allow setting e.g. CCACHE=1 to wrap all building in ccache.
-if [ -n "${CCACHE}" ]; then
-    CCACHE=ccache
-fi
-
 # If changing this wrapper, change clang-target-wrapper.c accordingly.
 CLANG="${DIR}/clang"
 FLAGS=("--start-no-unused-arguments")
@@ -69,4 +64,4 @@ esac
 FLAGS+=("-target" "${TARGET}")
 FLAGS+=("--end-no-unused-arguments")
 
-"${CCACHE}" "${CLANG}" "${FLAGS[@]}" "${@}"
+"${CLANG}" "${FLAGS[@]}" "${@}"

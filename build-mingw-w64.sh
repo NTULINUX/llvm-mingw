@@ -64,8 +64,8 @@ for arch in $ARCHS; do
     FLAGS+=("--with-default-msvcrt=ucrt")
     FLAGS+=("--enable-silent-rules")
     ../configure \
-        --host="$arch-w64-mingw32" \
-        --prefix="$PREFIX/$arch-w64-mingw32" \
+        --host="${arch}-w64-mingw32" \
+        --prefix="${PREFIX}/${arch}-w64-mingw32" \
         "${FLAGS[@]}"
     make -j"${CORES}"
     make install

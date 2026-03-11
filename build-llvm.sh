@@ -17,7 +17,7 @@
 
 set -e
 
-LLVM_BRANCH="main"
+LLVM_BRANCH="release/22.x"
 
 PREFIX="${1}"
 if [ -z "${PREFIX}" ]; then
