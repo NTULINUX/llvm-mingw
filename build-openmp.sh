@@ -30,7 +30,6 @@ ARCHS="i686 x86_64"
 cd "llvm-project/runtimes"
 
 for arch in ${ARCHS}; do
-    CMAKEFLAGS=()
     case ${arch} in
     x86_64)
         CMAKEFLAGS=("-DLIBOMP_ASMFLAGS=-m64")
