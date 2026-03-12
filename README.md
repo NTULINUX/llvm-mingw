@@ -15,6 +15,10 @@ Main changes include:
  - Complete re-work of toolchain wrappers
  - ThinLTO enabled build
  - Polly optimizations enabled by default (-O3 -mllvm -polly)
+ - `-march=x86-64-v3` enabled by default for x86_64-w64-mingw32
+    - Requires: AVX AVX2 BMI1 BMI2 F16C FMA ABM MOVBE XSAVE
+ - `-march=prescott` enabled by default for i686-w64-mingw32
+    - Requires: MMX SSE SSE2 SSE3 FXSR
  - Remove Docker
  - Remove CI/CD
  - Remove tests
