@@ -56,12 +56,22 @@ cmake \
     -DLLVM_BUILD_STATIC=ON \
     -DLLVM_BUILD_TESTS=OFF \
     -DLLVM_INCLUDE_TESTS=OFF \
+    -DLLVM_OPTIMIZED_TABLEGEN=ON \
+    -DLLVM_ENABLE_RTTI=OFF \
     -DCLANG_INCLUDE_TESTS=OFF \
+    -DCLANG_ENABLE_OBJC_REWRITER=OFF \
+    -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
+    -DLLVM_ENABLE_ASSERTIONS=OFF \
+    -DLLVM_INCLUDE_EXAMPLES=OFF \
+    -DLLVM_BUILD_RUNTIME=OFF \
+    -DLLVM_BUILD_BENCHMARKS=OFF \
+    -DLLVM_INCLUDE_BENCHMARKS=OFF \
+    -DLLVM_BUILD_INSTRUMENTED=OFF \
     -DLLVM_ENABLE_PROJECTS="${PROJECTS}" \
     -DLLVM_ENABLE_BINDINGS=OFF \
     -DLLVM_TARGETS_TO_BUILD=X86 \
     -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
-    -DLLVM_TOOLCHAIN_TOOLS="llvm-ar;llvm-ranlib;llvm-objdump;llvm-rc;llvm-cvtres;llvm-nm;llvm-strings;llvm-readobj;llvm-dlltool;llvm-pdbutil;llvm-objcopy;llvm-strip;llvm-cov;llvm-profdata;llvm-addr2line;llvm-symbolizer;llvm-windres;llvm-ml;llvm-readelf;llvm-size;llvm-cxxfilt;llvm-lib" \
+    -DLLVM_TOOLCHAIN_TOOLS="llvm-ar;llvm-ranlib;llvm-objdump;llvm-rc;llvm-cvtres;llvm-nm;llvm-strings;llvm-readobj;llvm-dlltool;llvm-pdbutil;llvm-objcopy;llvm-strip;llvm-cov;llvm-addr2line;llvm-symbolizer;llvm-windres;llvm-ml;llvm-readelf;llvm-size;llvm-cxxfilt;llvm-lib" \
     "${LTO[@]}" \
     ..
 
