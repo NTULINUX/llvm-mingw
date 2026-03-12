@@ -35,7 +35,7 @@ for arch in ${ARCHS}; do
     mkdir -p "build-${arch}"
     cd "build-${arch}"
     arch_prefix="${PREFIX}/${arch}-w64-mingw32"
-    CFLAGS="-O2" CXXFLAGS="-O2" CC="${arch}-w64-mingw32-clang" CXX="${arch}-w64-mingw32-clang++" \
+    CFLAGS="-O3" CXXFLAGS="-O3" CC="${arch}-w64-mingw32-clang" CXX="${arch}-w64-mingw32-clang++" \
         ../configure --host="${arch}-w64-mingw32" --prefix="${arch_prefix}" --libdir="${arch_prefix}/lib" \
         --enable-silent-rules
     make -j"${CORES}"

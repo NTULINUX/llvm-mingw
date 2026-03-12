@@ -34,7 +34,7 @@ else
 fi
 
 # Comment the line below to drastically speed up build
-LTO=("-DLLVM_ENABLE_LTO=thin")
+LTO=("-DLLVM_ENABLE_LTO=thin" "-DLLVM_PARALLEL_LINK_JOBS=8")
 
 cd "llvm-project/llvm"
 
@@ -46,6 +46,8 @@ cd "build"
 
 rm -rf CMake*
 cmake \
+    -DCMAKE_C_FLAGS="-O3 -march=x86-64-v3" \
+    -DCMAKE_CXX_FLAGS="-O3 -march=x86-64-v3" \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_USE_LINKER=lld \
